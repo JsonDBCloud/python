@@ -1,46 +1,46 @@
-# jsondb-cloud
+# README Update Implementation Plan
 
-The official Python SDK for [jsondb.cloud](https://jsondb.cloud) — a hosted JSON document database.
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
+**Goal:** Align README.md with the jsondb-cloud README guideline — add badges, configuration, API reference, related packages, and license sections.
+
+**Architecture:** Single-file edit to `README.md`. No code changes. All content derived from the existing source code and the shared guideline template.
+
+**Tech Stack:** Markdown
+
+---
+
+### Task 1: Add badges after the one-liner
+
+**Files:**
+- Modify: `README.md:1-3`
+
+**Step 1: Insert badge row after the one-liner**
+
+Add this block between the one-liner and `## Install`:
+
+```markdown
 [![PyPI version](https://img.shields.io/pypi/v/jsondb-cloud)](https://pypi.org/project/jsondb-cloud/)
 [![Downloads](https://img.shields.io/pypi/dm/jsondb-cloud)](https://pypi.org/project/jsondb-cloud/)
 [![CI](https://github.com/JsonDBCloud/python/actions/workflows/ci.yml/badge.svg)](https://github.com/JsonDBCloud/python/actions)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.9-blue)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-
-## Install
-
-```bash
-pip install jsondb-cloud
 ```
 
-## Quick Start
+**Step 2: Verify**
 
-```python
-from jsondb_cloud import JsonDB
+Visually confirm badges sit between the one-liner and Install heading with a blank line above and below.
 
-db = JsonDB(api_key="jdb_sk_live_xxxx")
-users = db.collection("users")
+---
 
-# Create
-user = users.create({"name": "Alice", "email": "alice@example.com"})
+### Task 2: Add Configuration section after Quick Start
 
-# Read
-user = users.get(user["_id"])
+**Files:**
+- Modify: `README.md` (insert after the Quick Start code block, before Async Usage)
 
-# List with filtering
-admins = users.list(filter={"role": "admin", "age": {"$gte": 21}}, sort="-createdAt", limit=10)
+**Step 1: Insert Configuration section**
 
-# Update
-users.update(user["_id"], {"name": "Alice Updated", "email": "alice@example.com"})
-
-# Patch (partial update)
-users.patch(user["_id"], {"age": 31})
-
-# Delete
-users.delete(user["_id"])
-```
-
+```markdown
 ## Configuration
 
 ```python
@@ -55,7 +55,22 @@ db = JsonDB(
 ```
 
 `AsyncJsonDB` accepts the same options and supports `async with` for automatic cleanup.
+```
 
+**Step 2: Verify**
+
+Confirm section appears between Quick Start and Async Usage.
+
+---
+
+### Task 3: Add API section after Configuration
+
+**Files:**
+- Modify: `README.md` (insert after Configuration, before Async Usage)
+
+**Step 1: Insert API section**
+
+```markdown
 ## API
 
 All methods are available on both `Collection` (sync) and `AsyncCollection` (async).
@@ -71,37 +86,33 @@ All methods are available on both `Collection` (sync) and `AsyncCollection` (asy
 | **Import/Export** | `import_documents`, `export_documents` |
 
 See the [full API reference](https://jsondb.cloud/docs/sdks/python) for details.
-
-## Async Usage
-
-```python
-from jsondb_cloud import AsyncJsonDB
-
-async with AsyncJsonDB(api_key="jdb_sk_live_xxxx") as db:
-    users = db.collection("users")
-    user = await users.create({"name": "Alice"})
-    page = await users.list(filter={"role": "admin"})
 ```
 
-## Error Handling
+**Step 2: Verify**
 
-```python
-from jsondb_cloud import JsonDB, NotFoundError, QuotaExceededError, JsonDBError
+Confirm section appears between Configuration and Async Usage.
 
-try:
-    user = users.get("nonexistent")
-except NotFoundError as e:
-    print(f"Not found: {e.document_id}")
-except QuotaExceededError as e:
-    print(f"Limit: {e.limit}, Current: {e.current}")
-except JsonDBError as e:
-    print(f"Error: {e.code} - {e.message} (HTTP {e.status})")
+---
+
+### Task 4: Fix Documentation wording + add Related Packages and License
+
+**Files:**
+- Modify: `README.md` (end of file)
+
+**Step 1: Fix Documentation section**
+
+Change:
 ```
-
-## Documentation
-
+Full documentation is available at [jsondb.cloud/docs/sdks/python](https://jsondb.cloud/docs/sdks/python).
+```
+To:
+```
 Full documentation at [jsondb.cloud/docs/sdks/python](https://jsondb.cloud/docs/sdks/python).
+```
 
+**Step 2: Add Related Packages section after Documentation**
+
+```markdown
 ## Related Packages
 
 | Package | Description |
@@ -110,7 +121,27 @@ Full documentation at [jsondb.cloud/docs/sdks/python](https://jsondb.cloud/docs/
 | [@jsondb-cloud/mcp](https://github.com/JsonDBCloud/mcp) | MCP server for AI agents |
 | [@jsondb-cloud/cli](https://github.com/JsonDBCloud/cli) | CLI tool |
 | [jsondb-cloud](https://github.com/JsonDBCloud/python) (PyPI) | Python SDK |
+```
 
+**Step 3: Add License section at the end**
+
+```markdown
 ## License
 
 MIT
+```
+
+**Step 4: Verify**
+
+Confirm final section order matches the guideline: Documentation > Related Packages > License.
+
+---
+
+### Task 5: Commit
+
+**Step 1: Commit the changes**
+
+```bash
+git add README.md
+git commit -m "docs: align README with jsondb-cloud guideline"
+```
