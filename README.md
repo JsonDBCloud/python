@@ -6,6 +6,8 @@ The official Python SDK for [jsondb.cloud](https://jsondb.cloud) — a hosted JS
 [![Downloads](https://img.shields.io/pypi/dm/jsondb-cloud)](https://pypi.org/project/jsondb-cloud/)
 [![CI](https://github.com/JsonDBCloud/python/actions/workflows/ci.yml/badge.svg)](https://github.com/JsonDBCloud/python/actions)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.9-blue)](https://python.org)
+[![GitHub stars](https://img.shields.io/github/stars/JsonDBCloud/python)](https://github.com/JsonDBCloud/python)
+[![Last commit](https://img.shields.io/github/last-commit/JsonDBCloud/python)](https://github.com/JsonDBCloud/python)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## Install
