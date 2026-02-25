@@ -43,8 +43,8 @@ dev = [
 [project.urls]
 Homepage = "https://jsondb.cloud"
 Documentation = "https://jsondb.cloud/docs/sdks/python"
-Repository = "https://github.com/jsondb-cloud/sdk-python"
-Issues = "https://github.com/jsondb-cloud/sdk-python/issues"
+Repository = "https://github.com/JsonDBCloud/python"
+Issues = "https://github.com/JsonDBCloud/python/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/jsondb_cloud"]
