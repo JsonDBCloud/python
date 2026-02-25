@@ -1,0 +1,374 @@
+# jsondb-cloud
+
+> The official Python SDK for jsondb.cloud — a hosted JSON document database.
+
+Requires Python >= 3.9. Depends on httpx. Fully typed (py.typed).
+
+## Install
+
+pip install jsondb-cloud
+
+## Client Construction
+
+```python
+from jsondb_cloud import JsonDB, AsyncJsonDB
+
+# Sync client
+db = JsonDB(
+    api_key="jdb_sk_live_xxxx",  # required, "jdb_sk_live_*" or "jdb_sk_test_*"
+    project="v1",                 # default "v1"
+    base_url="https://api.jsondb.cloud",
+    max_retries=3,                # retries on 429/5xx
+    retry_base_delay=1.0,         # exponential backoff base (seconds)
+    retry_max_delay=10.0,         # backoff cap (seconds)
+    timeout=30.0,                 # request timeout (seconds)
+    headers={"X-Custom": "val"},  # optional extra headers
+)
+
+# Async client
+db = AsyncJsonDB(api_key="jdb_sk_live_xxxx")
+```
+
+Both support context managers:
+
+```python
+with JsonDB(api_key="jdb_sk_live_xxxx") as db:
+    ...
+
+async with AsyncJsonDB(api_key="jdb_sk_live_xxxx") as db:
+    ...
+```
+
+Client methods:
+- `collection(name: str) -> Collection` — get a collection reference
+- `list_collections() -> list[str]` — list all collections in the project
+- `close()` — close the underlying HTTP client
+
+## CRUD Operations
+
+All Collection methods exist in both sync and async forms. Async methods are identical but use `await`.
+
+### Create
+
+```python
+# Auto-generated ID
+user = users.create({"name": "Alice", "email": "alice@example.com"})
+# user == {"_id": "abc123", "name": "Alice", ..., "$createdAt": "...", "$updatedAt": "...", "$version": 1}
+
+# Explicit ID
+user = users.create({"name": "Bob"}, id="custom-id")
+```
+
+Signature: `create(data: dict, *, id: str | None = None) -> dict`
+
+### Get
+
+```python
+user = users.get("abc123")
+```
+
+Signature: `get(id: str) -> dict`
+
+Raises `NotFoundError` if document doesn't exist.
+
+### List
+
+```python
+result = users.list()
+result = users.list(
+    filter={"role": "admin"},           # equality filter
+    filter={"age": {"$gte": 21}},       # operator filter
+    sort="-createdAt",                   # sort descending
+    limit=10,                           # page size
+    offset=20,                          # skip N docs
+    select=["name", "email"],           # return only these fields
+)
+
+# result is a ListResult
+result.data    # list[dict] — the documents
+result.meta    # Meta(total, limit, offset, has_more)
+len(result)    # number of docs in this page
+for doc in result:  # iterable
+    print(doc["name"])
+result[0]      # indexable
+```
+
+Signature: `list(*, filter=None, sort=None, limit=None, offset=None, select=None) -> ListResult`
+
+### Filter Syntax
+
+Filters support equality and operators:
+
+```python
+# Equality
+filter={"role": "admin"}               # filter[role]=admin
+
+# Operators: $eq, $gt, $gte, $lt, $lte, $ne, $in, $contains, $startsWith, $endsWith
+filter={"age": {"$gte": 21}}           # filter[age][gte]=21
+filter={"age": {"$gte": 21, "$lt": 65}}  # multiple operators on same field
+filter={"status": {"$in": ["active", "pending"]}}  # filter[status][in]=active,pending
+```
+
+### Update (full replace)
+
+```python
+user = users.update("abc123", {"name": "Alice Updated", "email": "alice@new.com"})
+```
+
+Signature: `update(id: str, data: dict) -> dict`
+
+### Patch (merge patch)
+
+```python
+user = users.patch("abc123", {"age": 31})
+# Sends Content-Type: application/merge-patch+json
+```
+
+Signature: `patch(id: str, data: dict) -> dict`
+
+### JSON Patch (RFC 6902)
+
+```python
+user = users.json_patch("abc123", [
+    {"op": "replace", "path": "/age", "value": 31},
+    {"op": "add", "path": "/verified", "value": True},
+    {"op": "remove", "path": "/tempField"},
+])
+# Sends Content-Type: application/json-patch+json
+```
+
+Signature: `json_patch(id: str, operations: list[dict]) -> dict`
+
+### Delete
+
+```python
+users.delete("abc123")  # returns None
+```
+
+Signature: `delete(id: str) -> None`
+
+### Count
+
+```python
+total = users.count()                           # count all
+total = users.count(filter={"role": "admin"})   # count with filter
+```
+
+Signature: `count(*, filter: dict | None = None) -> int`
+
+## Bulk Operations
+
+### Bulk Create
+
+```python
+result = users.bulk_create([
+    {"name": "Charlie"},
+    {"name": "Dana"},
+])
+# result is a BulkResult
+result.results   # list[dict] — per-operation results with status, _id, ok
+result.summary   # BulkResultSummary(total, succeeded, failed)
+```
+
+Signature: `bulk_create(docs: list[dict]) -> BulkResult`
+
+### Mixed Bulk Operations
+
+```python
+result = users.bulk([
+    {"method": "POST", "body": {"name": "Alice"}},
+    {"method": "PUT", "id": "abc123", "body": {"name": "Updated"}},
+    {"method": "PATCH", "id": "abc123", "body": {"age": 31}},
+    {"method": "DELETE", "id": "old-doc"},
+])
+```
+
+Signature: `bulk(operations: list[dict]) -> BulkResult`
+
+## Schema Operations
+
+### Get Schema
+
+```python
+schema = users.get_schema()  # returns dict or None
+```
+
+### Set Schema
+
+```python
+users.set_schema({
+    "type": "object",
+    "required": ["name", "email"],
+    "properties": {
+        "name": {"type": "string"},
+        "email": {"type": "string", "format": "email"},
+    },
+})
+```
+
+### Remove Schema
+
+```python
+users.remove_schema()
+```
+
+### Validate Without Storing
+
+```python
+result = users.validate({"name": "Alice"})
+# result == {"collection": "users", "valid": True, "errors": []}
+```
+
+## Version History
+
+```python
+# List versions
+versions = users.list_versions("doc1")
+# versions == {"versions": [{"version": 1, "action": "create"}, ...]}
+
+# Get document at specific version
+old_doc = users.get_version("doc1", 1)
+
+# Restore to a previous version (creates new version)
+restored = users.restore_version("doc1", 1)
+
+# Diff two versions
+diff = users.diff_versions("doc1", 1, 2)
+# diff == {"added": {...}, "removed": {...}, "changed": {...}}
+```
+
+## Webhooks
+
+```python
+# Create
+webhook = users.create_webhook(
+    url="https://example.com/hook",
+    events=["document.created", "document.updated"],
+    description="My webhook",   # optional
+    secret="whsec_xxx",         # optional
+)
+
+# List
+result = users.list_webhooks()  # {"data": [...]}
+
+# Get (includes recent deliveries)
+webhook = users.get_webhook("wh1")
+
+# Update
+webhook = users.update_webhook("wh1", url="https://new.com/hook")
+
+# Delete
+users.delete_webhook("wh1")
+
+# Test
+delivery = users.test_webhook("wh1")
+# delivery == {"_id": "del1", "statusCode": 200}
+```
+
+## Import / Export
+
+### Import
+
+```python
+result = users.import_documents(
+    [{"name": "Alice"}, {"name": "Bob"}],
+    on_conflict="skip",     # "skip", "replace", or "merge"
+    id_field="_id",          # optional, field to use as document ID
+)
+```
+
+### Export
+
+```python
+docs = users.export_documents()                          # all documents
+docs = users.export_documents(filter={"role": "admin"})  # with filter
+```
+
+## Response Models
+
+### ListResult
+
+```python
+from jsondb_cloud import ListResult
+
+result.data: list[dict]   # documents
+result.meta: Meta          # pagination metadata
+len(result)                # number of documents
+for doc in result: ...     # iterable
+result[0]                  # indexable
+```
+
+### Meta
+
+```python
+from jsondb_cloud import Meta
+
+meta.total: int       # total matching documents
+meta.limit: int       # page size
+meta.offset: int      # documents skipped
+meta.has_more: bool   # more pages available
+```
+
+### BulkResult
+
+```python
+from jsondb_cloud import BulkResult, BulkResultSummary
+
+result.results: list[dict]            # per-operation results
+result.summary: BulkResultSummary
+result.summary.total: int
+result.summary.succeeded: int
+result.summary.failed: int
+```
+
+## Error Handling
+
+All errors inherit from `JsonDBError`:
+
+```python
+from jsondb_cloud import JsonDBError, NotFoundError, ValidationError
+
+try:
+    user = users.get("nonexistent")
+except NotFoundError as e:
+    print(e.message)       # "Not found"
+    print(e.code)          # "DOCUMENT_NOT_FOUND"
+    print(e.status)        # 404
+    print(e.document_id)   # may be set
+except JsonDBError as e:
+    print(e.message, e.code, e.status, e.details)
+```
+
+### Error Classes
+
+| Class | Status | Code | Extra Attributes |
+|-------|--------|------|------------------|
+| `NotFoundError` | 404 | DOCUMENT_NOT_FOUND | `document_id: str \| None` |
+| `ConflictError` | 409 | CONFLICT | |
+| `ValidationError` | 400 | VALIDATION_FAILED | `errors: list[dict]` |
+| `UnauthorizedError` | 401 | UNAUTHORIZED | |
+| `ForbiddenError` | 403 | FORBIDDEN | |
+| `RateLimitError` | 429 | RATE_LIMITED | |
+| `QuotaExceededError` | 429 | QUOTA_EXCEEDED | `limit: int \| None`, `current: int \| None` |
+| `DocumentTooLargeError` | 413 | DOCUMENT_TOO_LARGE | |
+| `ServerError` | 500 | INTERNAL_ERROR | |
+
+### ValidationError Details
+
+```python
+except ValidationError as e:
+    for err in e.errors:
+        print(err["path"])      # "/email"
+        print(err["message"])   # "is required"
+        print(err["keyword"])   # "required"
+```
+
+## Automatic Retries
+
+The client automatically retries on HTTP 429 and 5xx errors with exponential backoff. Configure via `max_retries`, `retry_base_delay`, and `retry_max_delay` on the client constructor.
+
+## Links
+
+- Docs: https://jsondb.cloud/docs/sdks/python
+- PyPI: https://pypi.org/project/jsondb-cloud/
+- Source: https://github.com/JsonDBCloud/python

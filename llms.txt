@@ -1,0 +1,80 @@
+# jsondb-cloud
+
+> The official Python SDK for jsondb.cloud — a hosted JSON document database.
+
+## Install
+
+pip install jsondb-cloud
+
+## Quick Start
+
+Sync:
+
+```python
+from jsondb_cloud import JsonDB
+
+db = JsonDB(api_key="jdb_sk_live_xxxx")
+users = db.collection("users")
+
+user = users.create({"name": "Alice", "email": "alice@example.com"})
+print(user["_id"])
+
+user = users.get(user["_id"])
+users.update(user["_id"], {"name": "Alice Updated"})
+users.delete(user["_id"])
+```
+
+Async:
+
+```python
+from jsondb_cloud import AsyncJsonDB
+
+async with AsyncJsonDB(api_key="jdb_sk_live_xxxx") as db:
+    users = db.collection("users")
+    user = await users.create({"name": "Alice"})
+    user = await users.get(user["_id"])
+```
+
+## Client
+
+```python
+JsonDB(api_key, *, project="v1", base_url="https://api.jsondb.cloud", timeout=30.0, headers=None)
+AsyncJsonDB(...)  # same parameters, async context manager
+```
+
+Methods: `collection(name) -> Collection`, `list_collections() -> list[str]`, `close()`
+
+## Collection Methods
+
+CRUD: `create(data, *, id=None)`, `get(id)`, `list(*, filter=None, sort=None, limit=None, offset=None, select=None)`, `update(id, data)`, `patch(id, data)`, `json_patch(id, operations)`, `delete(id)`, `count(*, filter=None)`
+
+Bulk: `bulk_create(docs)`, `bulk(operations)`
+
+Schema: `get_schema()`, `set_schema(schema)`, `remove_schema()`, `validate(data)`
+
+Versions: `list_versions(id)`, `get_version(id, version)`, `restore_version(id, version)`, `diff_versions(id, from_version, to_version)`
+
+Webhooks: `create_webhook(*, url, events)`, `list_webhooks()`, `get_webhook(webhook_id)`, `update_webhook(webhook_id, **kwargs)`, `delete_webhook(webhook_id)`, `test_webhook(webhook_id)`
+
+Import/Export: `import_documents(documents, *, on_conflict=None)`, `export_documents(*, filter=None)`
+
+## Errors
+
+All errors inherit from `JsonDBError(message, code, status, details)`.
+
+- `NotFoundError` (404) — document not found
+- `ConflictError` (409) — write conflict
+- `ValidationError` (400) — schema validation failed, has `.errors` list
+- `UnauthorizedError` (401) — invalid API key
+- `ForbiddenError` (403) — insufficient scope
+- `RateLimitError` (429) — rate limited
+- `QuotaExceededError` (429) — plan quota exceeded
+- `DocumentTooLargeError` (413) — document too large
+- `ServerError` (500) — internal server error
+
+## Links
+
+- Docs: https://jsondb.cloud/docs/sdks/python
+- PyPI: https://pypi.org/project/jsondb-cloud/
+- Source: https://github.com/JsonDBCloud/python
+- Full LLM docs: see llms-full.txt in this repository
