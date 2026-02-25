@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, cast
 
 from ._http import AsyncHTTPClient, SyncHTTPClient
 from .models import BulkResult, ListResult
@@ -104,11 +104,11 @@ class Collection:
     def create(self, data: Dict[str, Any], *, id: Optional[str] = None) -> Dict[str, Any]:
         """Create a new document."""
         path = self._path(id) if id else self._path()
-        return self._http.request("POST", path, json=data)
+        return cast(Dict[str, Any], self._http.request("POST", path, json=data))
 
     def get(self, id: str) -> Dict[str, Any]:
         """Get a single document by ID."""
-        return self._http.request("GET", self._path(id))
+        return cast(Dict[str, Any], self._http.request("GET", self._path(id)))
 
     def list(
         self,
@@ -131,21 +131,21 @@ class Collection:
 
     def update(self, id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Replace a document entirely."""
-        return self._http.request("PUT", self._path(id), json=data)
+        return cast(Dict[str, Any], self._http.request("PUT", self._path(id), json=data))
 
     def patch(self, id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Merge-patch a document (partial update)."""
-        return self._http.request(
+        return cast(Dict[str, Any], self._http.request(
             "PATCH", self._path(id), json=data,
             headers={"Content-Type": "application/merge-patch+json"},
-        )
+        ))
 
     def json_patch(self, id: str, operations: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Apply JSON Patch operations (RFC 6902) to a document."""
-        return self._http.request(
+        return cast(Dict[str, Any], self._http.request(
             "PATCH", self._path(id), json=operations,
             headers={"Content-Type": "application/json-patch+json"},
-        )
+        ))
 
     def delete(self, id: str) -> None:
         """Delete a document by ID."""
@@ -175,7 +175,7 @@ class Collection:
         qs = _build_query_string(filter=filter, count=True)
         path = f"{self._path()}?{qs}"
         data = self._http.request("GET", path)
-        return data["count"]
+        return cast(int, data["count"])
 
     # ------------------------------------------------------------------
     # Schema
@@ -184,7 +184,7 @@ class Collection:
     def get_schema(self) -> Optional[Dict[str, Any]]:
         """Get the JSON Schema for this collection."""
         data = self._http.request("GET", self._path("_schema"))
-        return data.get("schema")
+        return cast(Optional[Dict[str, Any]], data.get("schema"))
 
     def set_schema(self, schema: Dict[str, Any]) -> None:
         """Set a JSON Schema for this collection."""
@@ -196,7 +196,7 @@ class Collection:
 
     def validate(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Validate a document against the collection schema without storing it."""
-        return self._http.request("POST", self._path("_validate"), json=data)
+        return cast(Dict[str, Any], self._http.request("POST", self._path("_validate"), json=data))
 
     # ------------------------------------------------------------------
     # Version history
@@ -204,21 +204,21 @@ class Collection:
 
     def list_versions(self, id: str) -> Dict[str, Any]:
         """List all versions of a document."""
-        return self._http.request("GET", self._path(f"{id}/versions"))
+        return cast(Dict[str, Any], self._http.request("GET", self._path(f"{id}/versions")))
 
     def get_version(self, id: str, version: int) -> Dict[str, Any]:
         """Get a document at a specific version."""
-        return self._http.request("GET", self._path(f"{id}/versions/{version}"))
+        return cast(Dict[str, Any], self._http.request("GET", self._path(f"{id}/versions/{version}")))
 
     def restore_version(self, id: str, version: int) -> Dict[str, Any]:
         """Restore a document to a specific version."""
-        return self._http.request("POST", self._path(f"{id}/versions/{version}/restore"))
+        return cast(Dict[str, Any], self._http.request("POST", self._path(f"{id}/versions/{version}/restore")))
 
     def diff_versions(self, id: str, from_version: int, to_version: int) -> Dict[str, Any]:
         """Diff two versions of a document (Pro feature)."""
-        return self._http.request(
+        return cast(Dict[str, Any], self._http.request(
             "GET", self._path(f"{id}/versions/diff?from={from_version}&to={to_version}")
-        )
+        ))
 
     # ------------------------------------------------------------------
     # Webhooks
@@ -234,19 +234,19 @@ class Collection:
             body["description"] = description
         if secret is not None:
             body["secret"] = secret
-        return self._http.request("POST", self._path("_webhooks"), json=body)
+        return cast(Dict[str, Any], self._http.request("POST", self._path("_webhooks"), json=body))
 
     def list_webhooks(self) -> Dict[str, Any]:
         """List all webhooks for this collection."""
-        return self._http.request("GET", self._path("_webhooks"))
+        return cast(Dict[str, Any], self._http.request("GET", self._path("_webhooks")))
 
     def get_webhook(self, webhook_id: str) -> Dict[str, Any]:
         """Get webhook details including recent deliveries."""
-        return self._http.request("GET", self._path(f"_webhooks/{webhook_id}"))
+        return cast(Dict[str, Any], self._http.request("GET", self._path(f"_webhooks/{webhook_id}")))
 
     def update_webhook(self, webhook_id: str, **kwargs: Any) -> Dict[str, Any]:
         """Update a webhook."""
-        return self._http.request("PUT", self._path(f"_webhooks/{webhook_id}"), json=kwargs)
+        return cast(Dict[str, Any], self._http.request("PUT", self._path(f"_webhooks/{webhook_id}"), json=kwargs))
 
     def delete_webhook(self, webhook_id: str) -> None:
         """Delete a webhook."""
@@ -254,7 +254,7 @@ class Collection:
 
     def test_webhook(self, webhook_id: str) -> Dict[str, Any]:
         """Send a test event to a webhook."""
-        return self._http.request("POST", self._path(f"_webhooks/{webhook_id}/test"))
+        return cast(Dict[str, Any], self._http.request("POST", self._path(f"_webhooks/{webhook_id}/test")))
 
     # ------------------------------------------------------------------
     # Import / Export
@@ -271,7 +271,7 @@ class Collection:
         if id_field is not None:
             parts.append(f"idField={id_field}")
         qs = f"?{'&'.join(parts)}" if parts else ""
-        return self._http.request("POST", self._path(f"_import{qs}"), json=documents)
+        return cast(Dict[str, Any], self._http.request("POST", self._path(f"_import{qs}"), json=documents))
 
     def export_documents(self, *, filter: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """Export all documents from this collection."""
@@ -279,7 +279,7 @@ class Collection:
         path = self._path("_export")
         if qs:
             path = f"{path}?{qs}"
-        return self._http.request("GET", path)
+        return cast(List[Dict[str, Any]], self._http.request("GET", path))
 
 
 class AsyncCollection:
@@ -319,11 +319,11 @@ class AsyncCollection:
     async def create(self, data: Dict[str, Any], *, id: Optional[str] = None) -> Dict[str, Any]:
         """Create a new document."""
         path = self._path(id) if id else self._path()
-        return await self._http.request("POST", path, json=data)
+        return cast(Dict[str, Any], await self._http.request("POST", path, json=data))
 
     async def get(self, id: str) -> Dict[str, Any]:
         """Get a single document by ID."""
-        return await self._http.request("GET", self._path(id))
+        return cast(Dict[str, Any], await self._http.request("GET", self._path(id)))
 
     async def list(
         self, *,
@@ -345,21 +345,21 @@ class AsyncCollection:
 
     async def update(self, id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Replace a document entirely."""
-        return await self._http.request("PUT", self._path(id), json=data)
+        return cast(Dict[str, Any], await self._http.request("PUT", self._path(id), json=data))
 
     async def patch(self, id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Merge-patch a document (partial update)."""
-        return await self._http.request(
+        return cast(Dict[str, Any], await self._http.request(
             "PATCH", self._path(id), json=data,
             headers={"Content-Type": "application/merge-patch+json"},
-        )
+        ))
 
     async def json_patch(self, id: str, operations: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Apply JSON Patch operations (RFC 6902) to a document."""
-        return await self._http.request(
+        return cast(Dict[str, Any], await self._http.request(
             "PATCH", self._path(id), json=operations,
             headers={"Content-Type": "application/json-patch+json"},
-        )
+        ))
 
     async def delete(self, id: str) -> None:
         """Delete a document by ID."""
@@ -393,7 +393,7 @@ class AsyncCollection:
         qs = _build_query_string(filter=filter, count=True)
         path = f"{self._path()}?{qs}"
         data = await self._http.request("GET", path)
-        return data["count"]
+        return cast(int, data["count"])
 
     # ------------------------------------------------------------------
     # Schema
@@ -402,7 +402,7 @@ class AsyncCollection:
     async def get_schema(self) -> Optional[Dict[str, Any]]:
         """Get the JSON Schema for this collection."""
         data = await self._http.request("GET", self._path("_schema"))
-        return data.get("schema")
+        return cast(Optional[Dict[str, Any]], data.get("schema"))
 
     async def set_schema(self, schema: Dict[str, Any]) -> None:
         """Set a JSON Schema for this collection."""
@@ -414,7 +414,7 @@ class AsyncCollection:
 
     async def validate(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Validate a document against the collection schema without storing it."""
-        return await self._http.request("POST", self._path("_validate"), json=data)
+        return cast(Dict[str, Any], await self._http.request("POST", self._path("_validate"), json=data))
 
     # ------------------------------------------------------------------
     # Version history
@@ -422,21 +422,21 @@ class AsyncCollection:
 
     async def list_versions(self, id: str) -> Dict[str, Any]:
         """List all versions of a document."""
-        return await self._http.request("GET", self._path(f"{id}/versions"))
+        return cast(Dict[str, Any], await self._http.request("GET", self._path(f"{id}/versions")))
 
     async def get_version(self, id: str, version: int) -> Dict[str, Any]:
         """Get a document at a specific version."""
-        return await self._http.request("GET", self._path(f"{id}/versions/{version}"))
+        return cast(Dict[str, Any], await self._http.request("GET", self._path(f"{id}/versions/{version}")))
 
     async def restore_version(self, id: str, version: int) -> Dict[str, Any]:
         """Restore a document to a specific version."""
-        return await self._http.request("POST", self._path(f"{id}/versions/{version}/restore"))
+        return cast(Dict[str, Any], await self._http.request("POST", self._path(f"{id}/versions/{version}/restore")))
 
     async def diff_versions(self, id: str, from_version: int, to_version: int) -> Dict[str, Any]:
         """Diff two versions of a document (Pro feature)."""
-        return await self._http.request(
+        return cast(Dict[str, Any], await self._http.request(
             "GET", self._path(f"{id}/versions/diff?from={from_version}&to={to_version}")
-        )
+        ))
 
     # ------------------------------------------------------------------
     # Webhooks
@@ -452,19 +452,19 @@ class AsyncCollection:
             body["description"] = description
         if secret is not None:
             body["secret"] = secret
-        return await self._http.request("POST", self._path("_webhooks"), json=body)
+        return cast(Dict[str, Any], await self._http.request("POST", self._path("_webhooks"), json=body))
 
     async def list_webhooks(self) -> Dict[str, Any]:
         """List all webhooks for this collection."""
-        return await self._http.request("GET", self._path("_webhooks"))
+        return cast(Dict[str, Any], await self._http.request("GET", self._path("_webhooks")))
 
     async def get_webhook(self, webhook_id: str) -> Dict[str, Any]:
         """Get webhook details including recent deliveries."""
-        return await self._http.request("GET", self._path(f"_webhooks/{webhook_id}"))
+        return cast(Dict[str, Any], await self._http.request("GET", self._path(f"_webhooks/{webhook_id}")))
 
     async def update_webhook(self, webhook_id: str, **kwargs: Any) -> Dict[str, Any]:
         """Update a webhook."""
-        return await self._http.request("PUT", self._path(f"_webhooks/{webhook_id}"), json=kwargs)
+        return cast(Dict[str, Any], await self._http.request("PUT", self._path(f"_webhooks/{webhook_id}"), json=kwargs))
 
     async def delete_webhook(self, webhook_id: str) -> None:
         """Delete a webhook."""
@@ -472,7 +472,7 @@ class AsyncCollection:
 
     async def test_webhook(self, webhook_id: str) -> Dict[str, Any]:
         """Send a test event to a webhook."""
-        return await self._http.request("POST", self._path(f"_webhooks/{webhook_id}/test"))
+        return cast(Dict[str, Any], await self._http.request("POST", self._path(f"_webhooks/{webhook_id}/test")))
 
     # ------------------------------------------------------------------
     # Import / Export
@@ -489,7 +489,7 @@ class AsyncCollection:
         if id_field is not None:
             parts.append(f"idField={id_field}")
         qs = f"?{'&'.join(parts)}" if parts else ""
-        return await self._http.request("POST", self._path(f"_import{qs}"), json=documents)
+        return cast(Dict[str, Any], await self._http.request("POST", self._path(f"_import{qs}"), json=documents))
 
     async def export_documents(self, *, filter: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """Export all documents from this collection."""
@@ -497,4 +497,4 @@ class AsyncCollection:
         path = self._path("_export")
         if qs:
             path = f"{path}?{qs}"
-        return await self._http.request("GET", path)
+        return cast(List[Dict[str, Any]], await self._http.request("GET", path))

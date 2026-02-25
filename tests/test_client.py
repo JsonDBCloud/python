@@ -189,7 +189,7 @@ class TestSyncCollectionList:
         )
 
         with JsonDB(api_key=API_KEY, base_url=BASE_URL) as db:
-            result = db.collection("users").list(filter={"age": {"$gte": 21}})
+            db.collection("users").list(filter={"age": {"$gte": 21}})
 
         request = route.calls[0].request
         assert "filter[age][gte]=21" in str(request.url)

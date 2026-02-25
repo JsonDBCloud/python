@@ -1,6 +1,5 @@
 """Tests for the jsondb_cloud.errors module."""
 
-import pytest
 
 from jsondb_cloud.errors import (
     ConflictError,

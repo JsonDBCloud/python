@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from ._http import AsyncHTTPClient, SyncHTTPClient
 from .collection import AsyncCollection, Collection
@@ -81,7 +81,7 @@ class JsonDB:
     def list_collections(self) -> List[str]:
         """List all collections in the project."""
         data = self._http.request("GET", f"/{self._project}")
-        return data.get("data", data) if isinstance(data, dict) else data
+        return cast(List[str], data.get("data", data) if isinstance(data, dict) else data)
 
     def close(self) -> None:
         """Close the underlying HTTP client and release resources."""
@@ -164,7 +164,7 @@ class AsyncJsonDB:
     async def list_collections(self) -> List[str]:
         """List all collections in the project."""
         data = await self._http.request("GET", f"/{self._project}")
-        return data.get("data", data) if isinstance(data, dict) else data
+        return cast(List[str], data.get("data", data) if isinstance(data, dict) else data)
 
     async def close(self) -> None:
         """Close the underlying async HTTP client and release resources."""

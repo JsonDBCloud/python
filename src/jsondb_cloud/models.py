@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterator, List
 
 
 class Meta:
@@ -70,7 +70,7 @@ class ListResult:
     def __len__(self) -> int:
         return len(self.data)
 
-    def __iter__(self):  # type: ignore[override]
+    def __iter__(self) -> Iterator[Dict[str, Any]]:
         return iter(self.data)
 
     def __getitem__(self, index: int) -> Dict[str, Any]:
