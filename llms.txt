@@ -72,9 +72,18 @@ All errors inherit from `JsonDBError(message, code, status, details)`.
 - `DocumentTooLargeError` (413) — document too large
 - `ServerError` (500) — internal server error
 
+## Full API Reference
+
+See llms-full.txt for complete method signatures, parameters, types, and examples.
+
 ## Links
 
 - Docs: https://jsondb.cloud/docs/sdks/python
 - PyPI: https://pypi.org/project/jsondb-cloud/
-- Source: https://github.com/JsonDBCloud/python
-- Full LLM docs: see llms-full.txt in this repository
+- GitHub: https://github.com/JsonDBCloud/python
+
+## Related Packages
+
+- `@jsondb-cloud/client` — JavaScript/TypeScript SDK — https://www.npmjs.com/package/@jsondb-cloud/client
+- `@jsondb-cloud/mcp` — MCP server for AI agents — https://www.npmjs.com/package/@jsondb-cloud/mcp
+- `@jsondb-cloud/cli` — CLI tool — https://www.npmjs.com/package/@jsondb-cloud/cli

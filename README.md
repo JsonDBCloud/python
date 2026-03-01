@@ -109,10 +109,10 @@ Full documentation at [jsondb.cloud/docs/sdks/python](https://jsondb.cloud/docs/
 
 | Package | Description |
 |---------|-------------|
-| [@jsondb-cloud/client](https://github.com/JsonDBCloud/node) | JavaScript/TypeScript SDK |
-| [@jsondb-cloud/mcp](https://github.com/JsonDBCloud/mcp) | MCP server for AI agents |
-| [@jsondb-cloud/cli](https://github.com/JsonDBCloud/cli) | CLI tool |
-| [jsondb-cloud](https://github.com/JsonDBCloud/python) (PyPI) | Python SDK |
+| [@jsondb-cloud/client](https://www.npmjs.com/package/@jsondb-cloud/client) | JavaScript/TypeScript SDK |
+| [@jsondb-cloud/mcp](https://www.npmjs.com/package/@jsondb-cloud/mcp) | MCP server for AI agents |
+| [@jsondb-cloud/cli](https://www.npmjs.com/package/@jsondb-cloud/cli) | CLI tool |
+| [jsondb-cloud](https://pypi.org/project/jsondb-cloud/) (PyPI) | Python SDK |
 
 ## License
 
